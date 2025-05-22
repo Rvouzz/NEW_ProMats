@@ -1,0 +1,62 @@
+﻿@model List<LoginModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<table class="table align-items-center table-bordered table-hover table-sm" id="tbl_history">
+    <thead class="bg-info text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th>No</th>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Last Update</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle">@i</td>
+                <td class="text-center align-middle">@mat.username</td>
+                <td class="text-center align-middle">@mat.name</td>
+                <td class="text-center align-middle">@mat.role</td>
+                <td class="text-center align-middle">@mat.login_id</td>
+                <td class="text-center align-middle">@mat.last_update</td>
+                <td class="text-center align-middle">
+                    <button onclick="btn_edit('@mat.user_id','@mat.username','@mat.name','@mat.role')" class="btn btn-sm btn-warning"><i class='far fa-edit'></i></button>
+                    <button onclick="btn_delete('@mat.user_id','@mat.name')" class="btn btn-sm btn-danger"><i class='far fa-trash-alt'></i></button>
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+
+    </tbody>
+</table>
+
+<style>
+    .blink {
+        visibility: visible;
+    }
+
+    .blink-hidden {
+        visibility: hidden;
+    }
+</style>
+
+
+<script>
+    setInterval(() => {
+        document.querySelectorAll('.blink').forEach(el => {
+            el.classList.toggle('blink-hidden');
+        });
+    }, 500); // Ganti 500 jadi lebih cepat/lambat sesuai kebutuhan
+</script>

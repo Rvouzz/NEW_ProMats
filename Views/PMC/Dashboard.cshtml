@@ -1,0 +1,377 @@
+﻿
+@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3 mb-2">
+                <div class="row" style="margin-top:-10px">
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date From</label>
+                        <input type="date" id="date_from" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date To</label>
+                        <input type="date" id="date_to" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_apply" name="btn_apply" onclick="applyfilter()" class="btn btn-dark btn-sm btn-block mt-2"><i class="fa fa-search mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_reset" name="btn_reset" class="btn btn-sm btn-warning btn-block mt-2" onclick="window.location.reload()"><i class="fa fa-history mr-1"></i> </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xl-3 col-md-6 mb-1 mt-3">
+                        <div class="card h-20">
+                            <div class="card-body">
+                                <div class="row align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1">MTL Shortage Qty</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="shortage_qty"></span></div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-box-open fa-2x text-info"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-1 mt-3">
+                        <div class="card h-20">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1">PO Finish Requests</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="approved"></span></div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-shopping-cart fa-2x text-warning"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-1 mt-3">
+                        <div class="card h-20">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1">In-progress Requests</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="rejected"></span></div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-history fa-2x text-secondary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-1 mt-3">
+                        <div class="card h-20">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-uppercase mb-1">Purchase Requests</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><span id="waiting"></span></div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-cog fa-2x text-primary"></i> 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="card p-2" style="height: 400px; position: relative;">
+                            <div id="spinner_loading2" class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <i class="fas fa-spinner fa-spin fa-lg" style="font-size:30pt;"></i>
+                            </div>
+                            <div id="barchart"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="card p-2" style="height: 400px; position: relative;">
+                            <div id="spinner_loading2" class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                                <i class="fas fa-spinner fa-spin fa-lg" style="font-size:30pt;"></i>
+                            </div>
+                            <div id="donutchart"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                applyfilter();
+            }, 500);
+
+
+            $.ajax({
+                type: 'GET',
+                url: "@Url.Action("GET_SHORTAGE_QTY", "PMC")",
+                success: function (data) {
+                    $("#shortage_qty").html(data.items[0].total_shortage);
+                },
+                error: function (error) {
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: "@Url.Action("GET_APPROVED_REQ", "PMC")",
+                success: function (data) {
+                    $("#approved").html(data.items[0].total);
+                },
+                error: function (error) {
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: "@Url.Action("GET_WAITING_REQ", "PMC")",
+                success: function (data) {
+                    $("#waiting").html(data.items[0].total);
+                },
+                error: function (error) {
+                }
+            });
+
+            $.ajax({
+                type: 'GET',
+                url: "@Url.Action("GET_REJECTED_REQ", "PMC")",
+                success: function (data) {
+                    $("#rejected").html(data.items[0].total);
+                },
+                error: function (error) {
+                }
+            });
+        });
+
+
+        function applyfilter() {
+            var date_from = $('#date_from').val();
+            var date_to = $('#date_to').val();
+
+            $.ajax({
+                url: "@Url.Action("GET_DONUT_PMC", "PMC")", // Endpoint for your controller action
+                type: 'GET',  // Request type (GET)
+                data: {
+                    date_from: date_from,
+                    date_to: date_to
+                },
+                success: function(data) {
+                    // Assuming data is an array of objects with the counts
+                    var approved = 0, waiting = 0, rejected = 0, in_progress = 0;
+
+                    if (data.length > 0) {
+                        approved = data[0].approved;
+                        waiting = data[0].waiting;
+                        rejected = data[0].rejected;
+                        in_progress = data[0].in_progress;
+                    }
+
+                    // Now, update the Highcharts chart with the new data
+                    Highcharts.chart('donutchart', {
+                        chart: {
+                            type: 'pie',
+                            custom: {},
+                            events: {
+                                render() {
+                                    const chart = this,
+                                        series = chart.series[0];
+                                    let customLabel = chart.options.chart.custom.label;
+
+                                    if (!customLabel) {
+                                        customLabel = chart.options.chart.custom.label =
+                                            chart.renderer.label(
+                                                'Total<br/>' +
+                                                '<strong>' + (approved + waiting + rejected + in_progress) + '</strong>'
+                                            )
+                                                .css({
+                                                    color: '#000',
+                                                    textAnchor: 'middle'
+                                                })
+                                                .add();
+                                    }
+
+                                    const x = series.center[0] + chart.plotLeft,
+                                        y = series.center[1] + chart.plotTop - (customLabel.attr('height') / 2);
+
+                                    customLabel.attr({
+                                        x,
+                                        y
+                                    });
+                                    // Set font size based on chart diameter
+                                    customLabel.css({
+                                        fontSize: `${series.center[2] / 12}px`
+                                    });
+                                }
+                            }
+                        },
+                        accessibility: {
+                            point: {
+                                valueSuffix: ''
+                            }
+                        },
+                        credits: {
+                            enabled: false
+                        },
+                        title: {
+                            text: 'PO Finish Request'
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.y}</b>'
+                        },
+                        legend: {
+                            enabled: false
+                        },
+                        plotOptions: {
+                            series: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                borderRadius: 8,
+                                dataLabels: [{
+                                    enabled: true,
+                                    distance: 20,
+                                    format: '{point.name}'
+                                }, {
+                                    enabled: true,
+                                    distance: -15,
+                                    format: '{point.y}',
+                                    style: {
+                                        fontSize: '0.9em'
+                                    }
+                                }],
+                                showInLegend: true
+                            }
+                        },
+                        series: [{
+                            name: 'Status',
+                            colorByPoint: true,
+                            innerSize: '75%',
+                            data: [{
+                                name: 'CLOSE',
+                                y: approved,
+                                color: '#28a745' // success color
+                            }, {
+                                name: 'IN-PROGRESS',
+                                y: in_progress,
+                                color: '#ffc107' // warning color
+                            }, {
+                                name: 'REJECTED',
+                                y: rejected,
+                                color: '#dc3545' // danger color
+                            }, {
+                                name: 'OPEN',
+                                y: waiting,
+                                color: '#007bff' // primary color
+                            }]
+                        }]
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error:', error); // Handle errors
+                    alert('Failed to load data for the donut chart.');
+                }
+            });
+        }
+ 
+
+        $(document).ready(function () {
+            $(document).ready(function () {
+                // Fetch data using AJAX
+                var currentYear = new Date().getFullYear();
+                $.ajax({
+                    url: "@Url.Action("GET_YEARLY_PMC", "PMC")",  // Adjust this URL according to your routing
+                    method: 'GET',
+                    success: function (data) {
+                        // Prepare the data for the Highcharts
+                        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        var consumptionData = new Array(12).fill(0);  // Initialize array to store counts (12 months)
+
+                        // Populate consumption data from the API response
+                        data.forEach(function (item) {
+                            consumptionData[item.month - 1] = item.count;  // item.month is 1-based, so adjust index
+                        });
+
+                        // Create the chart
+                        Highcharts.chart('barchart', {
+                            chart: {
+                                type: 'column'
+                            },
+                            title: {
+                                text: 'Yearly Total Requests (' + currentYear + ')',
+                                align: 'center'
+                            },
+                            xAxis: {
+                                categories: months,
+                                crosshair: true,
+                                accessibility: {
+                                    description: 'Months'
+                                }
+                            },
+                            credits: {
+                                enabled: false
+                            },
+                            yAxis: {
+                                min: 0,
+                                title: {
+                                    text: 'Requests'
+                                }
+                            },
+                            plotOptions: {
+                                column: {
+                                    pointPadding: 0.2,
+                                    borderWidth: 0
+                                }
+                            },
+                            series: [
+                                {
+                                    name: 'Requests',
+                                    data: consumptionData  // Use data from AJAX
+                                }
+                            ]
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching data:', error);
+                    }
+                });
+            });
+
+        });
+
+
+
+
+    </script>
+}

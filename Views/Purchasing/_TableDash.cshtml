@@ -1,0 +1,64 @@
+﻿@model List<PRModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<table class="table align-items-center table-bordered table-hover table-sm" id="tbl_history">
+    <thead class="bg-info text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th hidden>Req ID</th>
+            <th hidden>Part Code</th>
+            <th style="width:10%">Material ID</th>
+            <th style="width:15%">Quantity</th>
+            <th style="width:15%">Date</th>
+            <th style="width:15%">Request By</th>
+            <th style="width:15%">Status</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle" hidden>@mat.request_id</td>
+                <td class="text-center align-middle" hidden>@mat.part_code</td>
+                <td class="text-center align-middle" style="width:15%">@mat.material_id</td>
+                <td class="text-center align-middle" style="width:10%">@mat.quantity Kg</td>
+                @{
+                    DateTime date;
+                    string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy" }; // Add formats as needed
+                    if (DateTime.TryParseExact(mat.date, formats, null, System.Globalization.DateTimeStyles.None, out date))
+                    {
+                        <td class="text-center align-middle" style="width:15%">@date.ToString("dd MMM yyyy")</td>
+                    }
+                    else
+                    {
+                        <td class="text-center align-middle">Invalid Date</td>
+                    }
+                }
+                <td class="text-center align-middle" style="width:15%">@mat.request_by</td>
+                <td class="text-center align-middle">
+                    <span class="badge @(
+                        mat.status == "CLOSE" ? "bg-success" :
+                        mat.status == "OPEN" ? "bg-primary" :
+                        mat.status == "IN-PROGRESS" ? "bg-warning" :
+                        mat.status == "REJECTED" ? "bg-danger" : "bg-secondary"
+                    )" style="width:50%">
+                        @mat.status
+                    </span>
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+
+    </tbody>
+</table>
+
+
+
+

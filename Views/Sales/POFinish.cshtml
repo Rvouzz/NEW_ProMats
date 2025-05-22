@@ -1,0 +1,489 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 100px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3 mb-2">
+                <div class="row" style="margin-top:-10px">
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date From</label>
+                        <input type="date" id="date_from" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date To</label>
+                        <input type="date" id="date_to" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Status</label>
+                        <select id="select_status" style="width:100%;" class="form-control form-control-sm text-center">
+                            <option value="">--SELECT STATUS--</option>
+                            <option value="OPEN">OPEN</option>
+                            <option value="IN-PROGRESS">IN-PROGRESS</option>
+                            <option value="SHIPPING">SHIPPING</option>
+                            <option value="CLOSE">CLOSE</option>
+                            <option value="REJECTED">REJECTED</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_apply" name="btn_apply" onclick="applyfilter()" class="btn btn-dark btn-sm btn-block mt-2"><i class="fa fa-search mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_reset" name="btn_reset" class="btn btn-sm btn-warning btn-block mt-2" onclick="window.location.reload()"><i class="fa fa-history mr-1"></i> </button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="add_request" name="add_request" onclick="add_pofinish()" class="btn btn-success btn-sm btn-block mt-2"><i class="fa fa-plus mr-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_add" aria-labelledby="addPartModalLabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">   
+                <h5 class="modal-title" id="addPartModalLabel">ADD NEW PO FINISH GOOD</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- PO Finish ID -->
+                <div class="mb-3">
+                    <label class="form-label w-100">PO Finish ID</label>
+                    <select class="form-control" style="width: 100%" id="part_code" name="part_code" required>
+                        <!-- Tambahkan opsi sesuai kebutuhan -->
+                    </select>
+                </div>
+                <!-- PO Finish Name -->
+                <div class="mb-3">
+                    <label for="part_name" class="form-label w-100">PO Finish Name</label>
+                    <input type="text" class="form-control w-100" id="part_name" name="part_name" required readonly>
+                </div>
+                <!-- Quantity -->
+                <div class="mb-3">
+                    <label for="qty" class="form-label w-100">Quantity</label>
+                    <input type="number" class="form-control w-100" id="qty" name="qty" value="0" required>
+                </div>
+
+                <!-- Order File -->
+                <div class="mb-3">
+                    <label for="sales_order" class="form-label w-100">Order File</label>
+
+                    <!-- Link download template -->
+                    <a href="/path/to/template.xlsx" download class="btn btn-sm btn-warning mb-2">
+                        <i class="bi bi-download"></i> Download Template
+                    </a>
+
+                    <input type="file" class="form-control w-100" id="sales_order" name="sales_order" accept="application/pdf" required
+                           onchange="validateFilePdf(this)">
+
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="addpofinish()" style="width:30%">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_edit" aria-labelledby="addPartModalLabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">   
+                <h5 class="modal-title" id="addPartModalLabel">EDIT PO FINISH GOOD</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- PO Finish ID -->
+                <div class="mb-3">
+                    <label for="part_code1" class="form-label w-100">PO Finish ID</label>
+                    <input type="number" class="form-control w-100" id="po_id" name="po_id" hidden>
+                    <select class="form-control" style="width: 100%" id="part_code1" name="part_code1" required disabled>
+                        <!-- Tambahkan opsi sesuai kebutuhan -->
+                    </select>
+                </div>
+                <!-- PO Finish Name -->
+                <div class="mb-3">
+                    <label for="part_name1" class="form-label w-100">PO Finish Name</label>
+                    <input type="text" class="form-control w-100" id="part_name1" name="part_name1" required readonly>
+                </div>
+                <!-- Quantity -->
+                <div class="mb-3">
+                    <label for="qty1" class="form-label w-100">Quantity</label>
+                    <input type="number" class="form-control w-100" id="qty1" name="qty1" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="updatepofinish()" style="width:30%">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_detail" tabindex="-1" aria-labelledby="filelabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title text-light text-center" id="content_name"><i class="fas fa-list mr-2"></i>PO Finish Details</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12" id="table_details">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                applyfilter();
+            }, 1000);
+        });
+
+        function validateFilePdf(input) {
+            const filePath = input.value;
+            const allowedExtension = /\.pdf$/i;
+
+            if (!allowedExtension.test(filePath)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File',
+                    text: 'File must be a PDF!'
+                });
+                input.value = ''; // Clear the file input
+            }
+        }
+
+        function upload_picture(po_id, part_code) {
+            Swal.fire({
+                title: 'Upload Receipt Proof',
+                icon: 'question',
+                html: `
+                    <p>The item status is <strong>Shipping</strong>. Please upload a picture as <strong>proof that the item has been received</strong>.</p>
+                    <input type="file" id="uploadInput" class="swal2-file" accept="image/jpeg, image/jpg, image/png">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Upload',
+                cancelButtonText: 'Cancel',
+                preConfirm: () => {
+                    const fileInput = document.getElementById('uploadInput');
+                    const file = fileInput.files[0];
+                    if (!file) {
+                        Swal.showValidationMessage('Please select a file');
+                        return false;
+                    }
+
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                    if (!allowedTypes.includes(file.type)) {
+                        Swal.showValidationMessage('Only JPG, JPEG, and PNG files are allowed');
+                        return false;
+                    }
+
+                    return file;
+                }
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const file = result.value;
+                    const formData = new FormData();
+                    formData.append('sales_order', file);
+                    formData.append('po_id', po_id);
+                    formData.append('part_code', part_code);
+
+                    $.ajax({
+                        url: "@Url.Action("UPLOAD_RECEIPT_SALES")", // Update this with your actual endpoint
+                        method: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Uploaded!',
+                                text: 'Receipt proof has been uploaded successfully.'
+                            }).then(() => {
+                                // Reload the page after the user clicks "OK"
+                                window.location.reload();
+                            });
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Upload Failed',
+                                text: error
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+
+
+        function btn_edit(po_id, part_code, part_name, qty) {
+            $('#po_id').val(po_id)
+            console.log(part_code); // Check the value
+            $('#part_code1').append($('<option selected="selected"></option>').val(part_code).text(part_code));
+            $('#part_name1').val(part_name)
+            $('#qty1').val(qty);
+
+            $("#modal_edit").modal('show');
+        }
+
+        $(document).ready(function () {
+            $('#part_code').select2({
+                dropdownParent: $('#modal_add'),
+                placeholder: 'Select Part Code',
+                ajax: {
+                    url: "@Url.Action("GET_SELECT_POFINISH")", // Ensure this URL is correct
+                    data: function (params) {
+                        return {
+                            pofinish: params.term // Pass the search term to the server
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.items // Ensure the server returns data in this format
+                        };
+                    },
+                }
+            });
+        });
+
+        $("#part_code").change(function () {
+            var part = $(this).val();
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_PARTNAME_SALES", "Sales")",
+                data: { part: part },
+                success: function (data) {
+                    if (data !== null) {
+                        $("#part_name").val(data.part_name);
+                    }
+                }
+            });
+        });
+
+        function addpofinish() {
+            var part_code = $('#part_code').val();
+            var part_name = $('#part_name').val();
+            var qty = $('#qty').val();
+            var sales_order = $('#sales_order')[0].files[0];  // Ambil file pertama
+
+            // Validasi wajib isi semua field termasuk file
+            if (!part_code || qty === '' || !sales_order) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields and upload the file!'
+                });
+                return;
+            }
+
+            // Konfirmasi tambah data
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Add PO Finish Good Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        var formData = new FormData();
+                        formData.append('part_code', part_code);
+                        formData.append('part_name', part_name);
+                        formData.append('qty', qty);
+                        formData.append('sales_order', sales_order);  // File dimasukkan ke formData
+
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("ADD_POFINISH_GOOD", "Sales")",  // Pastikan URL benar
+                            data: formData,
+                            processData: false,  // jangan konversi jadi string
+                            contentType: false,  // biarkan otomatis jadi multipart/form-data
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your PO Finish has been added.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function add_pofinish() {
+            $('#modal_add').modal('show');
+        }
+
+        function applyfilter() {
+            var date_from = $('#date_from').val();
+            var date_to = $('#date_to').val();
+            var status = $('#select_status').val();
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_POFINISH_GOOD", "Sales")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to,
+                    status: status
+                },
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    initializeDataTable(); // Initialize DataTable after updating content
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+        function initializeDataTable() {
+            var table = $("#tbl_history");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": false,
+                    "responsive": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+
+        function btn_detail(po_id) {
+            // Kode AJAX untuk mengambil data dari server
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("GET_DETAIL_SALES", "Sales")",
+                data: {
+                    po_id: po_id
+                }
+            }).done(function (data) {
+                // Tampilkan modal
+                $("#modal_detail").modal("show");
+                // Isi konten modal dengan data yang diterima dari server
+                $("#table_details").html(data);
+            });
+        }
+
+        function btn_delete(po_id, part_code) {
+               if (po_id == '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Please Fill in All the requirement first !'
+                    })
+                }
+                else {
+                    Swal.fire({
+                        title: "Delete \n" + part_code + " ?",
+                        text: "Are you sure to Delete this Data? ",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: 'No!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: function () {
+                            return new Promise(function (resolve, reject) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "@Url.Action("DELETE_POFINISH_DATA", "Sales")",
+                                    data: {
+                                       po_id: po_id
+                                    },
+                                    dataType: "json",
+                                    success: function () {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success',
+                                            text: 'Deleted Successfully !'
+                                        })
+                                        setTimeout(function () {
+                                            window.location.href = '@Url.Action("POFinish", "Sales")';
+                                        }, 1000); // delay 1 detik sebelum reload halaman
+                                    }
+                                });
+
+                            })
+                        }
+
+                    })
+
+                }
+            }
+
+    </script>
+}

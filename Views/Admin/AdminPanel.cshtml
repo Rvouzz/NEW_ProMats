@@ -1,0 +1,407 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 100px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<div class="content" style="margin-top:-1rem">
+    <div class="container-fluid">
+        <div class="row justify-content-end" >
+            <div class="col-lg-1" style="margin-top:-0.5rem">
+                <label style="font-size:10pt;"></label>
+                <div>
+                    <button id="add_user" name="add_user" onclick="add_user()" class="btn btn-success btn-sm btn-block mt-2"><i class="fa fa-plus mr-1"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin-top:-0.5rem">
+            <div class="col-lg-12 mt-1 mb-2" >
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_add" tabindex="-1" aria-labelledby="addPartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title w-100 text-center" id="addPartModalLabel">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <form id="addUserForm">
+                    <div class="form-group mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control shadow-sm" id="username" name="username" required>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control shadow-sm" id="name" name="name" required>
+                    </div>
+
+                    <!-- Password input with eye icon inside -->
+                    <div class="form-group mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="position-relative">
+                            <input type="password" class="form-control shadow-sm pr-5" id="password" name="password" required style="padding-right: 2.5rem;">
+                            <i class="fas fa-eye-slash position-absolute top-50 translate-middle-y"
+                               id="toggleIcon"
+                               onclick="togglePassword()"
+                               style="right: 10px; margin-top: -27px; cursor: pointer; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="role" class="form-label">Role</label>
+                        <select class="form-control shadow-sm" id="role" name="role" required>
+                            <option value="" disabled selected>-- Select Role --</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="SALES">Sales</option>
+                            <option value="PMC">PMC</option>
+                            <option value="PURCHASING">Purchasing</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary w-25" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-dark w-25" onclick="save()">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_edit" tabindex="-1" aria-labelledby="addPartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title w-100 text-center" id="addPartModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <form id="addUserForm">
+                    <div class="form-group mb-3">
+                        <label for="e_username" class="form-label">Username</label>
+                        <input type="hidden" class="form-control shadow-sm" id="user_id" name="user_id" required>
+                        <input type="text" class="form-control shadow-sm" id="e_username" name="e_username" readonly>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="e_name" class="form-label">Name</label>
+                        <input type="text" class="form-control shadow-sm" id="e_name" name="e_name" required>
+                    </div>
+                    <!-- Password input with eye icon inside -->
+                    <div class="form-group mb-3">
+                        <label for="e_password" class="form-label">New Password (optional)</label>
+                        <div class="position-relative">
+                            <input type="password" class="form-control shadow-sm pr-5" id="e_password" name="e_password" style="padding-right: 2.5rem;" placeholder="Leave blank to keep current password">
+                            <i class="fas fa-eye-slash position-absolute top-50 translate-middle-y"
+                               id="e_toggleIcon"
+                               onclick="togglePasswordEdit()"
+                               style="right: 10px; margin-top: -27px; cursor: pointer; opacity: 0.5;"></i>
+                        </div>
+                    </div>
+
+
+                    <div class="form-group mb-3">
+                        <label for="e_role" class="form-label">Role</label>
+                        <select class="form-control shadow-sm" id="e_role" name="e_role" required>
+                            <option value="" disabled selected>-- Select Role --</option>
+                            <option value="ADMIN">Admin</option>
+                            <option value="SALES">Sales</option>
+                            <option value="PMC">PMC</option>
+                            <option value="PURCHASING">Purchasing</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-between px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary w-25" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-dark w-25" onclick="update()">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    <script>
+        function togglePassword() {
+          const passwordInput = document.getElementById("password");
+          const toggleIcon = document.getElementById("toggleIcon");
+
+          if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleIcon.classList.remove("fa-eye-slash");
+            toggleIcon.classList.add("fa-eye");
+          } else {
+            passwordInput.type = "password";
+            toggleIcon.classList.remove("fa-eye");
+            toggleIcon.classList.add("fa-eye-slash");
+          }
+        }
+
+        function togglePasswordEdit() {
+            const passwordInput = document.getElementById("e_password");
+            const toggleIcon = document.getElementById("e_toggleIcon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                toggleIcon.classList.remove("fa-eye-slash");
+                toggleIcon.classList.add("fa-eye");
+            } else {
+                passwordInput.type = "password";
+                toggleIcon.classList.remove("fa-eye");
+                toggleIcon.classList.add("fa-eye-slash");
+            }
+        }
+
+
+        $(document).ready(function () {
+            setTimeout(function () {
+                fetch_data();
+            }, 1000);
+        });
+
+        function add_user() {
+            $('#modal_add').modal('show');
+        }
+
+        function save() {
+            const username = $('#username').val().trim();
+            const name = $('#name').val().trim();
+            const password = $('#password').val().trim();
+            const role = $('#role').val();
+
+            // Validasi input kosong
+            if (!username || !name || !password || !role) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Konfirmasi sebelum menyimpan
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Add new user?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("ADD_NEW_USER", "Admin")',
+                        data: {
+                            username: username,
+                            name: name,
+                            password: password,
+                            role: role
+                        }
+                    }).then(response => {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: response.message || 'User successfully added.',
+                                icon: 'success'
+                            });
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed!',
+                                text: response.message || 'Failed to add user.'
+                            });
+                        }
+                    }).catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while sending the request.'
+                        });
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        }
+
+        function update() {
+            const user_id = $('#user_id').val().trim();
+            const username = $('#e_username').val().trim(); // readonly
+            const name = $('#e_name').val().trim();
+            const role = $('#e_role').val();
+            const password = $('#e_password').val();
+
+            // Validasi input kosong
+            if (!user_id || !username || !name || !role) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Konfirmasi update
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Update user data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: () => {
+                    return $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("UPDATE_USER", "Admin")',
+                        data: {
+                            user_id: user_id,
+                            username: username,
+                            name: name,
+                            role: role,
+                            password: password
+                        }
+                    }).then(response => {
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: response.message || 'User successfully updated.',
+                                icon: 'success'
+                            });
+                            setTimeout(() => location.reload(), 1000);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Failed!',
+                                text: response.message || 'Failed to update user.'
+                            });
+                        }
+                    }).catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while sending the request.'
+                        });
+                    });
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            });
+        }
+
+
+        function btn_edit(user_id, username, name, role) {
+            $('#user_id').val(user_id)
+            $('#e_username').val(username)
+            $('#e_name').val(name)
+            $('#e_role').append($('<option selected="selected"></option>').val(role).text(role));
+
+            $("#modal_edit").modal('show');
+        }
+
+        function btn_delete(user_id, name) {
+               if (user_id == '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Please Fill in All the requirement first !'
+                    })
+                }
+                else {
+                    Swal.fire({
+                        title: "Delete \n" + name + " ?",
+                        text: "Are you sure to Delete this user? ",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        cancelButtonColor: '#dc3545',
+                        confirmButtonText: 'Yes!',
+                        cancelButtonText: 'No!',
+                        showLoaderOnConfirm: true,
+                        preConfirm: function () {
+                            return new Promise(function (resolve, reject) {
+                                $.ajax({
+                                    type: "POST",
+                                    url: "@Url.Action("DELETE_USER", "Admin")",
+                                    data: {
+                                       user_id: user_id
+                                    },
+                                    dataType: "json",
+                                    success: function () {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Success',
+                                            text: 'Deleted Successfully !'
+                                        })
+                                        setTimeout(function () {
+                                            window.location.href = '@Url.Action("AdminPanel", "Admin")';
+                                        }, 1000); // delay 1 detik sebelum reload halaman
+                                    }
+                                });
+
+                            })
+                        }
+
+                    })
+
+                }
+            }
+
+        function fetch_data() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_USER_DATA", "Admin")",
+                data: {
+                },
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    initializeDataTable();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+        function initializeDataTable() {
+            var table = $("#tbl_history");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": true,
+                    "responsive": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+
+    </script>
+}

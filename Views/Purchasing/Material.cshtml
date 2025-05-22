@@ -1,0 +1,352 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 100px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3 mb-2">
+                <div class="row" style="margin-top:-10px">
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date From</label>
+                        <input type="date" id="date_from" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date To</label>
+                        <input type="date" id="date_to" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_apply" name="btn_apply" onclick="applyfilter()" class="btn btn-dark btn-sm btn-block mt-2"><i class="fa fa-search mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_reset" name="btn_reset" class="btn btn-sm btn-warning btn-block mt-2" onclick="window.location.reload()"><i class="fa fa-history mr-1"></i> </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="ProsesTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_verify" aria-labelledby="addPartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">VERIFY PURCHASING</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label w-100">Supplier Name</label>
+                    <input type="text" class="form-control w-100" id="request_id" required hidden>
+                    <input type="text" class="form-control w-100" id="supplier" name="supplier" placeholder="Please insert supplier name!" required>
+                </div>
+                <div class="mb-3">
+                    <label for="lead_time" class="form-label w-100">Lead Time</label>
+                    <input type="text" class="form-control w-100" id="lead_time" name="lead_time" placeholder="Ex: 10-14" required>
+                </div>
+                <div class="mb-3">
+                    <label for="shipment" class="form-label w-100">Shipment Day</label>
+                    <input type="number" class="form-control w-100" id="shipment" name="shipment" value="0" required>
+                </div>
+                <div class="mb-3">
+                    <label for="total_lead" class="form-label w-100">Total Lead Time</label>
+                    <input type="text" class="form-control w-100" id="total_lead" name="total_lead" placeholder="Ex: 16 Weeks 4 Days" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="verify()" style="width:30%">Verify</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {  
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                applyfilter();
+            }, 1000);
+        });
+
+        $(document).ready(function () {
+
+        });
+
+        function btn_verify(request_id) {
+            $('#request_id').val(request_id)
+            $('#modal_verify').modal('show');
+        }
+
+        function verify() {
+            var request_id = $('#request_id').val();
+            var supplier = $('#supplier').val();
+            var lead_time = $('#lead_time').val();
+            var shipment = $('#shipment').val();
+            var total_lead = $('#total_lead').val();
+
+            // Validate required fields
+            if (supplier === '' || lead_time === '' || shipment === '' || total_lead === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Confirmation dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Verify Purchasing Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("VERIFY_PURCHASING", "Purchasing")", // Ensure this is correctly generated by Razor
+                            data: {
+                                request_id: request_id,
+                                supplier: supplier,
+                                lead_time: lead_time + ' Weeks',
+                                shipment: shipment + ' Days',
+                                total_lead: total_lead
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your Purchasing Data has been verify.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function btn_acc(request_id, material_id) {
+            if (request_id == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Fill in All the requirement first !'
+                })
+            }
+            else {
+                Swal.fire({
+                    title: "Process \n" + material_id + "?",
+                    text: "Are you sure to Process this Purchase?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("APPROVE_PR", "Purchasing")",
+                                data: {
+                                    request_id: request_id
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: 'Successfully !'
+                                    })
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("Material", "Purchasing")';
+                                    }, 1000); // delay 1 detik sebelum reload halaman
+                                }
+                            });
+
+                        })
+                    }
+
+                })
+
+            }
+        }
+
+        function btn_reject(request_id, material_id) {
+            if (request_id == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Fill in All the requirement first !'
+                })
+            }
+            else {
+                Swal.fire({
+                    title: "Reject \n" + material_id + "?",
+                    text: "Are you sure to Reject this Purchase? ",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("REJECT_PR", "Purchasing")",
+                                data: {
+                                    request_id: request_id
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: 'Successfully !'
+                                    })
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("Material", "Purchasing")';
+                                    }, 1000); // delay 1 detik sebelum reload halaman
+                                }
+                            });
+
+                        })
+                    }
+
+                })
+
+            }
+        }
+
+        function applyfilter() {
+            var date_from = $('#date_from').val();
+            var date_to = $('#date_to').val();
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_PURCHASING_REQ", "Purchasing")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to
+                },
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    initializeDataTable(); // Initialize DataTable after updating content
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_PROSES_REQ", "Purchasing")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to
+                },
+                success: function (data) {
+                    $("#ProsesTable").html(data);
+                    var table = $("#tbl_proses");
+                    if (table.length > 0) {
+                        table.DataTable({
+                            "paging": true,
+                            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                            "pageLength": 10,
+                            "autoWidth": false,
+                            "destroy": true,
+                            "ordering": true,
+                            "responsive": true
+                        });
+                    } else {
+                        console.log("Table element not found");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+        function initializeDataTable() {
+            var table = $("#tbl_history");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": true,
+                    "responsive": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+
+    </script>
+}

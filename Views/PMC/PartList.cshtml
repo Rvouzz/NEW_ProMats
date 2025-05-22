@@ -1,0 +1,838 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 70px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+
+
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-4 mb-2">
+                <div class="row justify-content-end" style="margin-top:-45px;">
+                    <div class="col-lg-1">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="add_part" name="add_part" onclick="add_part()" class="btn btn-success btn-sm btn-block mt-2"><i class="fa fa-plus mr-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row" style="margin-top:-40px;">
+                    <div class="col-lg-4 col-md-4 col-sm-6" style="margin-top:32px;">
+                        <select id="select_code" style="width:100%;" class="form-control form-control-sm text-center">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row justify-content-end" style="margin-top:-4rem;">
+                    <div class="col-lg-1">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="process_data" name="process_data" onclick="process_data()" class="btn btn-primary btn-sm btn-block mt-2"><i class="fas fa-sync mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="add_material" name="add_material" onclick="add_material()" class="btn btn-success btn-sm btn-block mt-2"><i class="fa fa-plus mr-1"></i></button>
+                        </div>
+                    </div>
+                </div>
+                    
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="Material">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal fade" id="modal_add" aria-labelledby="addPartModalLabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">ADD NEW PART</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="part_code" class="form-label">Part Code</label>
+                    <input type="text" class="form-control" id="part_code" name="part_code" required>
+                </div>
+                <div class="mb-3">
+                    <label for="part_name" class="form-label">Part Name</label>
+                    <input type="text" class="form-control" id="part_name" name="part_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="part" class="form-label">Part</label>
+                    <input type="number" class="form-control" id="part" value="0" name="part" required>
+                </div>
+                <div class="mb-3">
+                    <label for="runner" class="form-label">Runner</label>
+                    <input type="number" class="form-control" id="runner" value="0" name="runner" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="submitAddPart()" style="width:30%">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="material_add" aria-labelledby="addPartModalLabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">ADD NEW MATERIAL</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="select_partcode" class="form-label w-100">Part Code</label>
+                    <select class="form-control" style="width: 100%" id="select_partcode" name="select_partcode" required>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="material_id" class="form-label w-100">Material ID</label>
+                    <input type="text" class="form-control w-100" id="material_id" name="material_id" placeholder="Material ID" required>
+                </div>
+                <div class="mb-3">
+                    <label for="material_name" class="form-label w-100">Material Name</label>
+                    <input type="text" class="form-control w-100" id="material_name" name="material_name" placeholder="Material Name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="opening_stock" class="form-label w-100">Opening Stock</label>
+                    <input type="number" class="form-control w-100" id="opening_stock" name="opening_stock" value="0" required>
+                </div>
+                <div class="mb-3" hidden>
+                    <label for="incoming" class="form-label w-100">Incoming</label>
+                    <input type="number" class="form-control w-100" id="incoming" name="incoming" value="0" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="materialadd()" style="width:30%">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- EDIT MODAL -->
+<div class="modal fade" id="modal_edit" aria-labelledby="addPartModalLabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">EDIT PO FINISH</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3" hidden>
+                    <label for="id_part" class="form-label">ID Part</label>
+                    <input type="text" class="form-control" id="id_part" name="id_part" required>
+                </div>
+                <div class="mb-3">
+                    <label for="part_code" class="form-label">Part Code</label>
+                    <input type="text" class="form-control" id="part_code1" name="part_code" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="part_name" class="form-label">Part Name</label>
+                    <input type="text" class="form-control" id="part_name1" name="part_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="part" class="form-label">Part</label>
+                    <input type="number" class="form-control" id="part1" value="0" name="part" required>
+                </div>
+                <div class="mb-3">
+                    <label for="runner" class="form-label">Runner</label>
+                    <input type="number" class="form-control" id="runner1" value="0" name="runner" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="submitEditPart()" style="width:30%">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="material_edit" aria-labelledby="addPartModalLabel">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content"> 
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">UPDATE MATERIAL</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="e_material_id" class="form-label w-100">Material ID</label>
+                    <input type="hidden" class="form-control w-100" id="id_mtl" name="id_mtl" required>
+                    <input type="text" class="form-control w-100" id="e_material_id" name="e_material_id" placeholder="Material ID" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="e_material_name" class="form-label w-100">Material Name</label>
+                    <input type="text" class="form-control w-100" id="e_material_name" name="e_material_name" placeholder="Material Name" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="e_opening_stock" class="form-label w-100">Opening Stock</label>
+                    <input type="number" class="form-control w-100" id="e_opening_stock" name="e_opening_stock" required readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="e_incoming" class="form-label w-100">Incoming</label>
+                    <input type="number" class="form-control w-100" id="e_incoming" name="e_incoming" required>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="edit_material()" style="width:30%">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            GET_MASTER_PART();
+
+            $('#select_partcode').select2({
+                placeholder: 'Select Part Code',
+                ajax: {
+                    url: "@Url.Action("GET_SELECT_PCODE", "PMC")", // Pastikan URL ini benar
+                    data: function (params) {
+                        return {
+                            pcode: params.term // Pass the search term ke server
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.items // Pastikan server mengembalikan data dalam format ini
+                        };
+                    },
+                }
+            });
+        });
+
+        function add_part() {
+            // Tampilkan modal
+            $('#modal_add').modal('show');
+        }
+
+        function add_material() {
+            // Tampilkan modal
+            $('#material_add').modal('show');
+        }
+
+        function submitAddPart() {
+            var part_code = $('#part_code').val();
+            var part_name = $('#part_name').val();
+            var part = $('#part').val();
+            var runner = $('#runner').val();
+
+            // Validate required fields
+            if (part_code === '' || part_name === '' || part === '' || runner === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Confirmation dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Add Master Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("ADD_PART_DATA", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                part_code: part_code,
+                                part_name: part_name,
+                                part: part,
+                                runner: runner
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your Master Data has been added.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function materialadd() {
+            var part_code = $('#select_partcode').val();
+            var material_id = $('#material_id').val();
+            var material_name = $('#material_name').val();
+            var opening_stock = $('#opening_stock').val();
+            var incoming = $('#incoming').val();
+
+            // Validate required fields
+            if (part_code === '' || material_id === '' || material_name === '' || opening_stock === '' || incoming === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Confirmation dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Add Material Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("ADD_MATERIAL_DATA", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                part_code: part_code,
+                                material_id: material_id,
+                                material_name: material_name,
+                                opening_stock: opening_stock,
+                                incoming: incoming
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your Material Data has been added.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function btn_edit(id_part, part_code, part_name, part, runner) {
+            $('#id_part').val(id_part)
+            $('#part_code1').val(part_code)
+            $('#part_name1').val(part_name)
+            $('#part1').val(part ? parseFloat(part.toString().replace(',', '.')).toFixed(2  ) : '');
+            $('#runner1').val(runner ? parseFloat(runner.toString().replace(',', '.')).toFixed(2) : '');
+
+            $("#modal_edit").modal('show');
+        }
+
+        function btn_editmaterial(id_mtl, material_id, material_name, opening_stock, incoming) {
+            $('#id_mtl').val(id_mtl)
+            $('#e_material_id').val(material_id)
+            $('#e_material_name').val(material_name)
+            $('#e_opening_stock').val(opening_stock)
+            $('#e_incoming').val(incoming)
+
+            $("#material_edit").modal('show');
+        }
+
+        function edit_material() {
+            var id_mtl = $('#id_mtl').val();
+            var material_id = $('#e_material_id').val();
+            var material_name = $('#e_material_name').val();
+            var opening_stock = parseFloat($('#e_opening_stock').val()) || 0;
+            var incoming = parseFloat($('#e_incoming').val()) || 0;
+            var new_opening_stock = opening_stock + incoming;
+
+            // Validate required fields
+            if (opening_stock === '' || incoming === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Confirmation dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Edit Master Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("UPDATE_MATERIAL_DATA", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                id_mtl: id_mtl,
+                                material_id: material_id,
+                                material_name: material_name,
+                                opening_stock: new_opening_stock,
+                                incoming: 0
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your Master Data has been Update.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function submitEditPart() {
+            var id_part = $('#id_part').val();
+            var part_code = $('#part_code1').val();
+            var part_name = $('#part_name1').val();
+            var part = $('#part1').val();
+            var runner = $('#runner1').val();
+
+            // Validate required fields
+            if (part_code === '' || part_name === '' || part === '' || runner === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please fill in all the required fields!'
+                });
+                return;
+            }
+
+            // Confirmation dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Edit Master Data?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("UPDATE_PART_DATA", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                id_part: id_part,
+                                part_code: part_code,
+                                part_name: part_name,
+                                part: part,
+                                runner: runner
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Added!',
+                                        text: 'Your Master Data has been Update.',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function process_data() {
+            var part_code = $('#select_code').val();
+            if (part_code == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Input',
+                    text: 'Please fill in all the required fields!'
+                });
+            } else {
+                Swal.fire({
+                    title: "Process " + part_code + "?",
+                    text: "Are you sure you want to process this data?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes, process it!',
+                    cancelButtonText: 'Cancel',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("PROCESS_POFINISH", "PMC")",
+                                data: {
+                                    part_code: part_code
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Processed',
+                                        text: 'The data has been processed successfully!'
+                                    });
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("PartList", "PMC")';
+                                    }, 1000);
+                                },
+                                error: function (xhr) {
+                                    let message = "An error occurred during the process.";
+                                    if (xhr.status === 400 && xhr.responseText) {
+                                        message = xhr.responseText;
+                                    }
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Process Failed',
+                                        text: message
+                                    });
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+        }
+
+        function btn_delete(id_part, part_code) {
+            if (id_part == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Fill in All the requirement first !'
+                })
+            }
+            else {
+                Swal.fire({
+                    title: "Delete \n" + part_code + " ?",
+                    text: "Are you sure to Delete this Data? ",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("DELETE_PART_DATA", "PMC")",
+                                data: {
+                                    id_part: id_part
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: 'Deleted Successfully !'
+                                    })
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("PartList", "PMC")';
+                                    }, 1000); // delay 1 detik sebelum reload halaman
+                                }
+                            });
+
+                        })
+                    }
+
+                })
+
+            }
+        }
+
+        function btn_del(id_mtl, material_id) {
+            if (id_mtl == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Fill in All the requirement first !'
+                })
+            }
+            else {
+                Swal.fire({
+                    title: "Delete \n" + material_id + " ?",
+                    text: "Are you sure to Delete this Data? ",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("DELETE_MATERIAL_DATA", "PMC")",
+                                data: {
+                                    id_mtl: id_mtl
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: 'Deleted Successfully !'
+                                    })
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("PartList", "PMC")';
+                                    }, 1000); // delay 1 detik sebelum reload halaman
+                                }
+                            });
+
+                        })
+                    }
+
+                })
+
+            }
+        }
+
+        // FUNCTION FOR FETCHING DATA //
+        function GET_MASTER_PART() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_MASTER_PART", "PMC")",
+                data: {},
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    initializeDataTable(); // Initialize DataTable after updating content
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            // Inisialisasi select2
+            $('#select_code').select2({
+                placeholder: 'Select Part Code',
+                ajax: {
+                    url: "@Url.Action("GET_SELECT_PART_CODE", "PMC")", // Pastikan URL ini benar
+                    data: function (params) {
+                        return {
+                            pcode: params.term // Pass the search term ke server
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.items // Pastikan server mengembalikan data dalam format ini
+                        };
+                    },
+                }
+            }).on('select2:open', function () {
+                // Mengatur teks placeholder di tengah
+                $('#select_code').next('.select2-container').find('.select2-selection--single').css('text-align', 'center');
+                $('#select_code').next('.select2-container').find('.select2-selection__placeholder').css('text-align', 'center');
+            });
+
+            // Event listener untuk onselect
+            $('#select_code').on('select2:select', function (e) {
+                var selectedPcode = e.params.data.id; // Ambil ID dari pilihan
+                console.log("Selected pcode:", selectedPcode);
+
+                // Periksa apakah selectedPcode ada
+                if (selectedPcode) {
+                    // Panggil GET_MASTER_MATERIAL dengan parameter pcode jika ada data
+                    GET_MASTER_MATERIAL(selectedPcode);
+                } else {
+                    // Kirim NULL jika tidak ada data
+                    GET_MASTER_MATERIAL(null);
+                }
+            });
+
+
+            // Ambil data pertama ketika select2 selesai diinisialisasi
+            $.ajax({
+                url: "@Url.Action("GET_SELECT_PART_CODE", "PMC")", // Pastikan URL ini benar
+                data: { pcode: '' }, // Minta data tanpa filter
+                success: function (response) {
+                    if (response.items && response.items.length > 0) {
+                        // Tambahkan pilihan pertama ke dropdown
+                        var firstItem = response.items[0];
+                        var option = new Option(firstItem.text, firstItem.id, true, true);
+                        $('#select_code').append(option).trigger('change');
+
+                        // Panggil GET_MASTER_MATERIAL dengan pcode pertama
+                        GET_MASTER_MATERIAL(firstItem.id);
+                    } else {
+                        // Jika tidak ada data, kirim NULL
+                        GET_MASTER_MATERIAL(null);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching initial data:', error);
+                    // Kirim NULL jika terjadi error
+                    GET_MASTER_MATERIAL(null);
+                }
+            });
+
+        });
+
+        // Fungsi GET_MASTER_MATERIAL dengan parameter pcode
+        function GET_MASTER_MATERIAL(pcode) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_MASTER_MATERIAL", "PMC")",
+                data: { pcode: pcode }, // Kirim pcode sebagai parameter
+                success: function (data) {
+                    // Isi data ke dalam elemen dengan ID 'Material'
+                    $("#Material").html(data);
+
+                    // Inisialisasi DataTable setelah data dimuat
+                    var table = $("#tbl_material");
+                    if (table.length > 0) {
+                        table.DataTable({
+                            "paging": true,
+                            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                            "pageLength": 5,
+                            "autoWidth": false,
+                            "destroy": true, // Agar tabel bisa diinisialisasi ulang
+                            "ordering": true
+                        });
+                    } else {
+                        console.log("Table element not found");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching master material data:', error);
+                    alert('An error occurred while fetching the material data. Please try again.'); // Pesan ramah pengguna
+                }
+            });
+        }
+
+        function initializeDataTable() {
+            var table = $("#tbl_history");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 5,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+    </script>
+}

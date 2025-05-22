@@ -1,0 +1,41 @@
+﻿@model List<DashboardModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+<table class="table align-items-center table-flush table-hover table-sm" id="tbl_history">
+    <thead class="thead-light text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th>No</th>
+            <th>Material ID</th>
+            <th>Material Name</th>
+            <th>Total Stock</th>
+            <th>Total Requirement</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle">@i</td>
+                <td class="text-center align-middle">@mat.material_id</td>
+                <td class="text-center align-middle">@mat.material_name</td>
+                <td class="text-center align-middle">@mat.total_stock Kg</td>
+                <td class="text-center align-middle">@mat.total_req Kg</td>
+                <td class="text-center align-middle">
+                    @if (mat.shortage_qty < 0)
+                    {
+                    <i class='text-danger fas fa-exclamation-triangle'></i>  <!-- Icon with red color for shortage -->
+                    }
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+    </tbody>
+</table>

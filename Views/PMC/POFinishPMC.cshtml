@@ -1,0 +1,549 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 100px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3 mb-2">
+                <div class="row" style="margin-top:-10px">
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date From</label>
+                        <input type="date" id="date_from" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date To</label>
+                        <input type="date" id="date_to" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_apply" name="btn_apply" onclick="applyfilter()" class="btn btn-dark btn-sm btn-block mt-2"><i class="fa fa-search mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_reset" name="btn_reset" class="btn btn-sm btn-warning btn-block mt-2" onclick="window.location.reload()"><i class="fa fa-history mr-1"></i> </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="POFinish">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div> 
+
+
+<div class="modal fade" id="modal_acc" aria-labelledby="addPartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="addPartModalLabel">ACC PO FINISH</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3" hidden>
+                    <label for="po_id" class="form-label">PO ID</label>
+                    <input type="text" class="form-control" id="po_id" name="po_id" required>
+                </div>
+                <div class="mb-3" hidden>
+                    <label for="file_order" class="form-label">Order File</label>
+                    <input type="text" class="form-control" id="file_order" name="file_order" required>
+                </div>
+                <div class="mb-3">
+                    <label for="part_code" class="form-label">Part Code</label>
+                    <input type="text" class="form-control" id="part_code" name="part_code" required readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="part_name" class="form-label">Part Name</label>
+                    <input type="text" class="form-control" id="part_name" name="part_name" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="qty" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="qty" name="qty" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="date" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="date" name="date" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="request_by" class="form-label">Request By</label>
+                    <input type="text" class="form-control" id="request_by" name="request_by" readonly>
+                </div>
+                <div class="mb-3" hidden>
+                    <label for="part" class="form-label">Part</label>
+                    <input type="number" class="form-control" id="part" name="part" readonly>
+                </div>
+                <div class="mb-3" hidden>
+                    <label for="runner" class="form-label">Runner</label>
+                    <input type="number" class="form-control" id="runner" name="runner" readonly>
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
+                <button type="button" class="btn btn-dark" onclick="confirm()" style="width:30%">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_delivery" tabindex="-1" aria-labelledby="modalDeliveryLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header bg-dark text-white text-center">
+                <h5 class="modal-title" id="modalDeliveryLabel">Deliver PO Finish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <!-- Hidden Fields -->
+                <div class="mb-3 d-none">
+                    <label for="po_id" class="form-label">PO ID</label>
+                    <input type="text" class="form-control" id="id_acc" name="id_acc">
+                    <input type="text" class="form-control" id="e_po_id" name="e_po_id">
+                </div>
+
+                <!-- Part Code -->
+                <div class="mb-3">
+                    <label for="e_dev_pcode" class="form-label">Part Code</label>
+                    <input type="text" class="form-control" id="e_dev_pcode" name="e_dev_pcode" readonly>
+                </div>
+
+                <!-- Part Name -->
+                <div class="mb-3">
+                    <label for="e_dev_part_name" class="form-label">Part Name</label>
+                    <input type="text" class="form-control" id="e_dev_part_name" name="e_dev_part_name" readonly>
+                </div>
+
+                <!-- Deliver By -->
+                <div class="mb-3">
+                    <label for="dev_by" class="form-label">Deliver By</label>
+                    <input type="text" class="form-control" id="dev_by" name="dev_by" value='@HttpContextAccessor.HttpContext.Session.GetString("username")' readonly>
+                </div>
+
+                <!-- Remark -->
+                <div class="mb-3">
+                    <label for="remark" class="form-label">Remark</label>
+                    <textarea class="form-control" id="remark" name="remark" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer d-flex justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width: 30%;">Close</button>
+                <button type="button" class="btn btn-dark" onclick="delivery()" style="width: 30%;">Deliver</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                applyfilter();
+            }, 1000);
+        });
+
+                function btn_delivery(id_acc, po_id, part_code, part_name, qty) {
+            // CHECK STOCK BEFORE DELIVERY
+            $.ajax({
+                type: 'GET',
+                url: "@Url.Action("CHECK_STOCK_PO", "PMC")",
+                data: {
+                    part_code: part_code
+                },
+                success: function (data) {
+                    // Make sure total_stock is available
+                    if (data && data.total_stock !== undefined) {
+                        if (data.total_stock >= qty) {
+                            // Stock is sufficient — show confirmation alert
+                            Swal.fire({
+                                title: 'Stock Available',
+                                text: `There are ${data.total_stock} qty available. Do you want to proceed with the delivery?`,
+                                icon: 'info',
+                                showCancelButton: true,
+                                confirmButtonText: 'Yes, proceed',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Set form values if user confirms
+                                    $('#id_acc').val(id_acc);
+                                    $('#e_po_id').val(po_id);
+                                    $('#e_dev_pcode').val(part_code);
+                                    $('#e_dev_part_name').val(part_name);
+
+                                    // Show the modal
+                                    $('#modal_delivery').modal('show');
+                                }
+                            });
+                        } else {
+                            // Stock is not sufficient
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Insufficient Stock',
+                                text: `Only ${data.total_stock} qty are available, but ${qty} qty are required.`,
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    } else {
+                        // Invalid response
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Failed to Retrieve Stock Data',
+                            text: 'Stock data is missing or response is invalid.',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                },
+                error: function (error) {
+                    // AJAX error
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'An Error Occurred',
+                        text: 'Failed to check stock. Please try again.',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+        }
+
+
+         function delivery() {
+            var po_id = $('#e_po_id').val();
+            var deliver_by = $('#dev_by').val();
+            var remark = $('#remark').val();
+
+            // Konfirmasi dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Deliver this PO Finish?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("DELIVER_POFINISH_PMC", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                po_id: po_id,
+                                deliver_by: deliver_by, 
+                                remark: remark
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Deliver!',
+                                        text: 'Successfully',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+        function btn_reject(po_id, part_code) {
+            if (po_id == '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Please Fill in All the requirement first !'
+                })
+            }
+            else {
+                Swal.fire({
+                    title: "Reject \n" + part_code + "?",
+                    text: "Are you sure to Reject this PO Finish? ",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#dc3545',
+                    confirmButtonText: 'Yes!',
+                    cancelButtonText: 'No!',
+                    showLoaderOnConfirm: true,
+                    preConfirm: function () {
+                        return new Promise(function (resolve, reject) {
+                            $.ajax({
+                                type: "POST",
+                                url: "@Url.Action("REJECT_POFINISH_PMC", "PMC")",
+                                data: {
+                                    po_id: po_id
+                                },
+                                dataType: "json",
+                                success: function () {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Success',
+                                        text: 'Successfully !'
+                                    })
+                                    setTimeout(function () {
+                                        window.location.href = '@Url.Action("POFinishPMC", "PMC")';
+                                    }, 1000); // delay 1 detik sebelum reload halaman
+                                }
+                            });
+
+                        })
+                    }
+
+                })
+
+            }
+        }
+
+        function btn_approved(po_id, part_code, part_name, qty, date, request_by, file_order) {
+            // Set nilai pada modal dari parameter tombol
+            $('#po_id').val(po_id);
+            $('#part_code').val(part_code);
+            $('#part_name').val(part_name);
+            $('#qty').val(qty);
+            $('#date').val(moment(date).format('YYYY-MM-DD'));
+            $('#request_by').val(request_by);
+            $('#file_order').val(file_order);
+
+            // Fungsi untuk memformat angka dengan titik desimal
+            function formatNumber(num) {
+                if (num) {
+                    // Replace koma dengan titik dan parse ke float
+                    return parseFloat(num.replace(',', '.')).toFixed(2);
+                }
+                return '';
+            }
+
+            // Ambil data berdasarkan nilai part_code dari parameter tombol
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_RUNNER_PMC", "PMC")",
+                data: { part_code: part_code }, // Gunakan nilai part_code dari parameter tombol
+                success: function (data) {
+                    if (data) {
+                        // Set nilai input berdasarkan hasil dari server
+                        $("#part").val(formatNumber(data.part));
+                        $("#runner").val(formatNumber(data.runner));
+                    } else {
+                        // Reset nilai jika data tidak ditemukan
+                        $("#part").val('');
+                        $("#runner").val('');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching data:", error);
+                    // Reset nilai jika terjadi kesalahan
+                    $("#part").val('');
+                    $("#runner").val('');
+                },
+                complete: function () {
+                    // Tampilkan modal setelah data selesai diambil
+                    $("#modal_acc").modal('show');
+                }
+            });
+        }
+
+        function confirm() {
+            // Ambil nilai dari input modal
+            var po_id = $('#po_id').val();
+            var part_code = $('#part_code').val();
+            var file_order = $('#file_order').val();
+            var part_name = $('#part_name').val();
+            var qty = parseFloat($('#qty').val());  // Convert qty to a number
+            var date = $('#date').val();
+            var request_by = $('#request_by').val();
+            var part = parseFloat($('#part').val());  // Convert part to a number
+            var runner = parseFloat($('#runner').val());  // Convert runner to a number
+
+            // Hitung nilai shot (qty * part + runner)
+            var shot = (qty * part) + runner;
+
+            // Konfirmasi dialog
+            Swal.fire({
+                title: "Are you sure?",
+                text: 'Confirm PO Finish?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'Yes!',
+                cancelButtonText: 'No!',
+                showLoaderOnConfirm: true,
+                preConfirm: function () {
+                    return new Promise(function (resolve, reject) {
+                        $.ajax({
+                            type: "POST",
+                            url: "@Url.Action("ACC_POFINISH_PMC", "PMC")", // Ensure this is correctly generated by Razor
+                            data: {
+                                po_id: po_id,         // Pass po_id
+                                part_code: part_code, // Pass part_code
+                                part_name: part_name, // Pass part_name
+                                qty: qty,             // Pass qty
+                                date: date,           // Pass date
+                                request_by: request_by, // Pass request_by
+                                part: part,           // Pass part value
+                                runner: runner,       // Pass runner value
+                                shot: shot,       // Pass shot value
+                                file_order: file_order            
+                            },
+                            success: function (data) {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Approved!',
+                                        text: 'Successfully',
+                                        icon: 'success'
+                                    });
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: data.message || 'An error occurred.'
+                                    });
+                                }
+                            },
+                            error: function () {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'An error occurred during the AJAX request.'
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        }
+
+
+
+        function applyfilter() {
+            var date_from = $('#date_from').val();
+            var date_to = $('#date_to').val();
+            var status = $('#select_status').val();
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_POFINISHPMC", "PMC")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to,
+                    status: status
+                },
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    initializeDataTable(); // Initialize DataTable after updating content
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+
+          $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_POFINISH_ACC", "PMC")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to,
+                    status: status
+                },
+                success: function (data) {
+                    $("#POFinish").html(data);
+                    initializeDataTable1();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+        function initializeDataTable() {
+            var table = $("#tbl_history");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": false,
+                    "responsive": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+
+        function initializeDataTable1() {
+            var table = $("#tbl_acc");
+            if (table.length > 0) {
+                table.DataTable({
+                    "paging": true,
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    "autoWidth": false,
+                    "destroy": true,
+                    "ordering": false,
+                    "responsive": true
+                });
+            } else {
+                console.log("Table element not found");
+            }
+        }
+
+    </script>
+}

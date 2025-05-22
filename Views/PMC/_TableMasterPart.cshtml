@@ -1,0 +1,41 @@
+﻿@model List<MstPartModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+<table class="table align-items-center table-bordered table-hover table-sm" id="tbl_history">
+    <thead class="bg-info text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th>No</th>
+            <th hidden>Id Part</th>
+            <th>Part Code</th>
+            <th>Part Name</th>
+            <th>Part</th>
+            <th>Runner</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle">@i</td>
+                <td hidden>@mat.id_part</td>
+                <td class="text-center align-middle">@mat.part_code</td>
+                <td class="text-center align-middle">@mat.part_name</td>
+                <td class="text-center align-middle">@mat.part Kg</td>
+                <td class="text-center align-middle">@mat.runner Kg</td>
+                <td class="text-center align-middle">
+                    <button onclick="btn_edit('@mat.id_part','@mat.part_code','@mat.part_name','@mat.part','@mat.runner')" class="btn btn-sm btn-warning" style="width:30%"><i class='far fa-edit'></i></button>
+                    <button onclick="btn_delete('@mat.id_part','@mat.part_code')" class="btn btn-sm btn-danger" style="width:30%"><i class='far fa-trash-alt'></i></button>
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+    </tbody>
+</table>

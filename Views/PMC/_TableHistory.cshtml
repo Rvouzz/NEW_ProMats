@@ -1,0 +1,94 @@
+﻿@model List<POFinishModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<table class="table align-items-center table-bordered table-hover table-sm" id="tbl_history">
+    <thead class="bg-info text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th hidden>PO ID</th>
+            <th>No</th>
+            <th>PO Finish ID</th>
+            <th>PO Finish Name</th>
+            <th>Quantity</th>
+            <th>Date</th>
+            <th>Request By</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle" hidden>@mat.po_id</td>
+                <td class="text-center align-middle">@i</td>
+                <td class="text-center align-middle">
+                    <button class="btn btn-sm btn-secondary"
+                            type="button"
+                            onclick="window.open('../File_Order/@mat.file_order', '_blank')">
+                        @mat.part_code
+                    </button>
+                </td>
+                <td class="text-center align-middle">@mat.part_name</td>
+                <td class="text-center align-middle">@mat.qty</td>
+                @{
+                    DateTime date;
+                    string[] formats = { "yyyy-MM-dd", "dd/MM/yyyy", "MM/dd/yyyy" }; // Add formats as needed
+                    if (DateTime.TryParseExact(mat.date, formats, null, System.Globalization.DateTimeStyles.None, out date))
+                    {
+                        <td class="text-center align-middle">@date.ToString("dd MMM yyyy")</td>
+                    }
+                    else
+                    {
+                        <td class="text-center align-middle">Invalid Date</td>
+                    }
+                }
+                <td class="text-center align-middle">@mat.request_by</td>
+                <td class="text-center align-middle">
+                    <span class="@(
+                mat.status == "CLOSE" ? "badge badge-success" :
+                mat.status == "SHIPPING" ? "badge badge-warning" :
+                mat.status == "OPEN" ? "badge badge-primary" :
+                mat.status == "REJECTED" ? "badge badge-danger" : ""
+            )">@mat.status</span>
+                </td>
+                <td class="text-center align-middle">
+                    @if (mat.status == "OPEN")
+                    {
+                        <button onclick="btn_edit('@mat.po_id','@mat.part_code', '@mat.part_name','@mat.qty')" class="btn btn-sm btn-warning"><i class='far fa-edit'></i></button>
+                        <button onclick="btn_delete('@mat.po_id','@mat.part_code')" class="btn btn-sm btn-danger"><i class='far fa-trash-alt'></i></button>
+                    }
+                    @if (mat.status == "CLOSE")
+                    {
+                        <button onclick="btn_detail('@mat.po_id')" class="btn btn-sm btn-info"><i class='fas fa-info-circle'></i></button>
+                    }
+                    @if (mat.status == "SHIPPING")
+                    {
+                        <button onclick="btn_detail('@mat.po_id')" class="btn btn-sm btn-info"><i class='fas fa-info-circle'></i></button>
+                    }
+                    @if (mat.status == "REJECTED")
+                    {
+                        <button onclick="btn_detail('@mat.po_id')" class="btn btn-sm btn-dark" disabled><i class='fas fa-info-circle'></i></button>
+                    }
+                    @if (mat.status == "IN-PROGRESS")
+                    {
+                        <button onclick="btn_detail('@mat.po_id')" class="btn btn-sm btn-dark" disabled><i class='fas fa-info-circle'></i></button>
+                    }
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+
+    </tbody>
+</table>
+
+
+
+

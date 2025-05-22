@@ -1,0 +1,65 @@
+﻿@model List<FGTrackingModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+
+<table class="table align-items-center table-bordered table-hover table-sm" id="tbl_history">
+    <thead class="bg-info text-center align-middle" style="font-size:12pt">
+        <tr>
+            <th hidden>PO ID</th>
+            <th>No</th>
+            <th>PO Finish ID</th>
+            <th>PO Finish Name</th>
+            <th>Total Stock</th>
+            <th>Total Request</th>
+            <th>Status</th>
+            <th>Last Update</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody class="text-center align-middle" style="font-size:12pt">
+        @{
+            int i = 1; // Inisialisasi counter untuk penomoran
+        }
+
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="text-center align-middle" hidden>@mat.id_det</td>
+                <td class="text-center align-middle">@i</td>
+                <td class="text-center align-middle">@mat.part_code</td>
+                <td class="text-center align-middle">@mat.part_name</td>
+                <td class="text-center align-middle">@mat.total_stock</td>
+                <td class="text-center align-middle">@(!string.IsNullOrEmpty(mat.total_request) ? mat.total_request : "0")</td>
+                <td class="text-center align-middle"><b>@Html.Raw(mat.status)</b></td>
+                <td class="text-center align-middle">@mat.update_date</td>
+                <td class="text-center align-middle">
+                    <button onclick="btn_edit('@mat.id_det','@mat.part_code','@mat.part_name','@mat.total_stock')" class="btn btn-sm btn-warning"><i class='far fa-edit'></i></button>
+                </td>
+            </tr>
+            i++; // Increment counter
+        }
+
+
+    </tbody>
+</table>
+
+<style>
+    .blink {
+        visibility: visible;
+    }
+
+    .blink-hidden {
+        visibility: hidden;
+    }
+</style>
+
+
+<script>
+    setInterval(() => {
+        document.querySelectorAll('.blink').forEach(el => {
+            el.classList.toggle('blink-hidden');
+        });
+    }, 500); // Ganti 500 jadi lebih cepat/lambat sesuai kebutuhan
+</script>

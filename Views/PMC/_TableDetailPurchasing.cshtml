@@ -1,0 +1,62 @@
+﻿@model List<PRModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+<table class="table table-bordered table-sm" id="tbl_history">
+    <thead class="bg-info text-center">
+        <tr>
+            <th colspan="2">Material Details</th>
+        </tr>
+    </thead>
+    <tbody class="align-middle">
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">PO Finish ID :</td>
+                <td class="pl-2">@mat.part_code</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">PO Material ID :</td>
+                <td class="pl-2">@mat.material_id</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Quantity :</td>
+                <td class="pl-2">@mat.quantity Kg</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Supplier Name :</td>
+                <td class="pl-2">@mat.supplier_name</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Lead Time :</td>
+                <td class="pl-2">@mat.lead_time</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Shipment :</td>
+                <td class="pl-2">@mat.shipment</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Total Lead Time :</td>
+                <td class="pl-2">@mat.total_time</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Approved By :</td>
+                <td class="pl-2">@mat.acc_by</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Receipt Proof :</td>
+                <td class="pl-2">
+                    @if (string.IsNullOrEmpty(mat.receipt_proof))
+                    {
+                        <span>Receipt not yet uploaded</span>
+                    }
+                    else
+                    {
+                        <img src="../PMC_Picture/@mat.receipt_proof" alt="Receipt Proof" style="max-width: 200px; height: auto;" />
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

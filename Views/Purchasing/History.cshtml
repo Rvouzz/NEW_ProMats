@@ -1,0 +1,146 @@
+﻿@using ProMats.Function
+@using Microsoft.AspNetCore.Http;
+@inject IHttpContextAccessor HttpContextAccessor
+
+<style>
+    .badge {
+        width: 100px; /* Set your desired width */
+        display: inline-block;
+        text-align: center;
+    }
+</style>
+
+<div class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-12 mt-3 mb-2">
+                <div class="row" style="margin-top:-10px">
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date From</label>
+                        <input type="date" id="date_from" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Date To</label>
+                        <input type="date" id="date_to" style="width:100%;" class="form-control form-control-sm text-center">
+                    </div>
+                    <div class="col-lg-2 col-md-2 col-sm-6">
+                        <label style="font-size:10pt; font-weight:bold;">Status</label>
+                        <select id="select_status" style="width:100%;" class="form-control form-control-sm text-center">
+                            <option value="">--SELECT STATUS--</option>
+                            <option value="SHIPPING">SHIPPING</option>
+                            <option value="CLOSE">CLOSE</option>
+                            <option value="REJECTED">REJECTED</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_apply" name="btn_apply" onclick="applyfilter()" class="btn btn-dark btn-sm btn-block mt-2"><i class="fa fa-search mr-1"></i></button>
+                        </div>
+                    </div>
+                    <div class="col-lg-1 col-md-1 col-sm-6">
+                        <label style="font-size:10pt;"></label>
+                        <div>
+                            <button id="btn_reset" name="btn_reset" class="btn btn-sm btn-warning btn-block mt-2" onclick="window.location.reload()"><i class="fa fa-history mr-1"></i> </button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="row">
+                    <div class="col-12 mt-3">
+                        <div class="card mb-4">
+                            <div class="table-responsive p-3" id="FilteredTable">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modal_detail" tabindex="-1" aria-labelledby="filelabel" >
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark">
+                <h5 class="modal-title text-light text-center" id="content_name"><i class="fas fa-list mr-2"></i>PO Material Details</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-12" id="table_details">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {  
+    <script>
+        $(document).ready(function () {
+            setTimeout(function () {
+                applyfilter();
+            }, 1000);
+        });
+
+        function btn_detail(request_id) {
+            // Kode AJAX untuk mengambil data dari server
+            $.ajax({
+                type: "POST",
+                url: "@Url.Action("GET_DETAIL_PURCHASING", "Purchasing")",
+                data: {
+                    request_id: request_id
+                }
+            }).done(function (data) {
+                // Tampilkan modal
+                $("#modal_detail").modal("show");
+                // Isi konten modal dengan data yang diterima dari server
+                $("#table_details").html(data);
+            });
+        }
+
+        function applyfilter() {
+            var date_from = $('#date_from').val();
+            var date_to = $('#date_to').val();
+            var status = $('#select_status').val();
+
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GET_HISTORY_REQ", "Purchasing")",
+                data: {
+                    date_from: date_from,
+                    date_to: date_to,
+                    status: status
+                },
+                success: function (data) {
+                    $("#FilteredTable").html(data);
+                    var table = $("#tbl_history");
+                    if (table.length > 0) {
+                        table.DataTable({
+                            "paging": true,
+                            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                            "pageLength": 10,
+                            "autoWidth": false,
+                            "destroy": true,
+                            "ordering": false,
+                            "responsive": true
+                        });
+                    } else {
+                        console.log("Table element not found");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching forecast data:', error);
+                    alert('An error occurred while fetching the forecast data. Please try again.'); // User-friendly message
+                }
+            });
+        }
+
+    </script>
+}

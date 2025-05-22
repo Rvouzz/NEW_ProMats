@@ -1,0 +1,50 @@
+﻿@model List<DetailSalesModel>
+@using Microsoft.AspNetCore.Http;
+@using ProMats.Function
+@inject IHttpContextAccessor HttpContextAccessor
+
+<table class="table table-bordered table-sm" id="tbl_history">
+    <thead class="bg-info text-center">
+        <tr>
+            <th colspan="2">PO Finish Good Details</th>
+        </tr>
+    </thead>
+    <tbody class="align-middle">
+        @foreach (var mat in Model)
+        {
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">PO Finish ID :</td>
+                <td class="pl-2">@mat.part_code</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">PO Finish Name :</td>
+                <td class="pl-2">@mat.part_name</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Deliver By :</td>
+                <td class="pl-2">@mat.deliver_by</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Finish Date :</td>
+                <td class="pl-2">@mat.finish_date</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Remark :</td>
+                <td class="pl-2">@mat.remark</td>  <!-- Added padding-left -->
+            </tr>
+            <tr>
+                <td class="font-weight-bold bg-secondary pl-2" style="width:30%">Receipt Proof :</td>
+                <td class="pl-2">
+                    @if (string.IsNullOrEmpty(mat.receipt_proof))
+                    {
+                        <span>Receipt not yet uploaded</span>
+                    }
+                    else
+                    {
+                        <img src="../Sales_Picture/@mat.receipt_proof" alt="Receipt Proof" style="max-width: 200px; height: auto;" />
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
