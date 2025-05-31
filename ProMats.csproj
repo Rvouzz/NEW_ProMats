@@ -36,6 +36,7 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\File_Order\" />
+    <Folder Include="wwwroot\Template\" />
     <Folder Include="wwwroot\PMC_Picture\" />
     <Folder Include="wwwroot\Sales_Picture\" />
   </ItemGroup>
