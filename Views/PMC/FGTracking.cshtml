@@ -72,6 +72,18 @@
             setTimeout(function () {
                 fetch_data();
             }, 1000);
+
+            $('#total_stock').on('input', function () {
+                if ($(this).val() < 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Stock',
+                        text: 'Stock must be 0 or more!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         });
 
         function btn_edit(id_det, part_code, part_name, total_stock) {

@@ -90,7 +90,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="quantity" class="form-label w-100">Quantity</label>
-                    <input type="number" class="form-control w-100" id="quantity" name="quantity" value="0" required>
+                    <input type="number" class="form-control w-100" id="quantity" name="quantity" placeholder="Enter quantity (min. 1)" required>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-center">
@@ -120,7 +120,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="e_quantity" class="form-label w-100">Quantity</label>
-                    <input type="number" class="form-control w-100" id="e_quantity" name="quantity">
+                    <input type="number" class="form-control w-100" id="e_quantity" placeholder="Enter quantity (min. 1)" name="quantity">
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-center">
@@ -158,6 +158,31 @@
             setTimeout(function () {
                 applyfilter();
             }, 1000);
+
+            $('#quantity').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Quantity',
+                        text: 'Quantity must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
+            $('#e_quantity').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Quantity',
+                        text: 'Quantity must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
         });
 
         function upload_picture(request_id, part_code, material_id) {

@@ -94,7 +94,7 @@
                 <!-- Quantity -->
                 <div class="mb-3">
                     <label for="qty" class="form-label w-100">Quantity</label>
-                    <input type="number" class="form-control w-100" id="qty" name="qty" value="0" required>
+                    <input type="number" class="form-control w-100" id="qty" name="qty" placeholder="Enter quantity (min. 1)" min="1" required>
                 </div>
 
                 <!-- Order File -->
@@ -183,6 +183,18 @@
             setTimeout(function () {
                 applyfilter();
             }, 1000);
+
+            $('#qty').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Quantity',
+                        text: 'Quantity must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         });
 
         function validateFilePdf(input) {

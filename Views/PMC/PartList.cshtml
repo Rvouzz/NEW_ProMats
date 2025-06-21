@@ -90,11 +90,11 @@
                 </div>
                 <div class="mb-3">
                     <label for="part" class="form-label">Part</label>
-                    <input type="number" class="form-control" id="part" value="0" name="part" required>
+                    <input type="number" class="form-control" id="part" placeholder="Enter part (min. 1)" name="part" required>
                 </div>
                 <div class="mb-3">
                     <label for="runner" class="form-label">Runner</label>
-                    <input type="number" class="form-control" id="runner" value="0" name="runner" required>
+                    <input type="number" class="form-control" id="runner" placeholder="Enter runner (min. 1)" name="runner" required>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-center">
@@ -167,11 +167,11 @@
                 </div>
                 <div class="mb-3">
                     <label for="part" class="form-label">Part</label>
-                    <input type="number" class="form-control" id="part1" value="0" name="part" required>
+                    <input type="number" class="form-control" id="part1" placeholder="Enter part (min. 1)" name="part" required>
                 </div>
                 <div class="mb-3">
                     <label for="runner" class="form-label">Runner</label>
-                    <input type="number" class="form-control" id="runner1" value="0" name="runner" required>
+                    <input type="number" class="form-control" id="runner1" placeholder="Enter runner (min. 1)" name="runner" required>
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-center">
@@ -182,44 +182,70 @@
     </div>
 </div>
 
-<div class="modal fade" id="material_edit" aria-labelledby="addPartModalLabel">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content"> 
-            <div class="modal-header bg-dark text-white text-center">
-                <h5 class="modal-title" id="addPartModalLabel">UPDATE MATERIAL</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="e_material_id" class="form-label w-100">Material ID</label>
-                    <input type="hidden" class="form-control w-100" id="id_mtl" name="id_mtl" required>
-                    <input type="text" class="form-control w-100" id="e_material_id" name="e_material_id" placeholder="Material ID" readonly>
-                </div>
-                <div class="mb-3">
-                    <label for="e_material_name" class="form-label w-100">Material Name</label>
-                    <input type="text" class="form-control w-100" id="e_material_name" name="e_material_name" placeholder="Material Name" readonly>
-                </div>
-                <div class="mb-3">
-                    <label for="e_opening_stock" class="form-label w-100">Opening Stock</label>
-                    <input type="number" class="form-control w-100" id="e_opening_stock" name="e_opening_stock" required readonly>
-                </div>
-                <div class="mb-3">
-                    <label for="e_incoming" class="form-label w-100">Incoming</label>
-                    <input type="number" class="form-control w-100" id="e_incoming" name="e_incoming" required>
-                </div>
-            </div>
-            <div class="modal-footer d-flex justify-content-center">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" style="width:30%">Close</button>
-                <button type="button" class="btn btn-dark" onclick="edit_material()" style="width:30%">Update</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
         $(document).ready(function () {
             GET_MASTER_PART();
+
+            $('#opening_stock').on('input', function () {
+                if ($(this).val() < 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Stock',
+                        text: 'Stock must be 0 or more!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
+            $('#part').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Part',
+                        text: 'Part must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
+            $('#runner').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Runner',
+                        text: 'Runner must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
+            $('#part1').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Part',
+                        text: 'Part must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
+
+            $('#runner1').on('input', function () {
+                if ($(this).val() <= 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Runner',
+                        text: 'Runner must be more than 0!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
 
             $('#select_partcode').select2({
                 placeholder: 'Select Part Code',

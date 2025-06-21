@@ -104,7 +104,17 @@
         });
 
         $(document).ready(function () {
-
+            $('#shipment').on('input', function () {
+                if ($(this).val() < 0) {
+                    $(this).val('');
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Shipment',
+                        text: 'Shipment must be 0 or more!',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            });
         });
 
         function btn_verify(request_id) {
